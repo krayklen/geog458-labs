@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8' />
+    <title>my First Map</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'>
+        <script>
+            // Javascript code ran by the computer when the HTML document is loaded
+
+            // My mapbox token
+            mapboxgl.accessToken = 'pk.eyJ1Ijoia3JheWtsZW4iLCJhIjoiY211d3l5bHNxMDNqeDJ3cTRlaWpqYWphNiJ9.F0hlZBZsAKWFNujWjWOSpg';
+            // Initializes the map object in the mapbox library; all the styles and functionsality are stored in this object which get rendered in the #map element
+            const mymap = new mapboxgl.Map({
+                container: 'map',
+                // Sets the style for the map
+                //style: 'mapbox://styles/mapbox/navigation-night-v1',
+                //projection: 'globe',
+                // Centers the map to Drumheller Fountain at UW-Seattle Campus
+                center: [-122.307814, 47.653817],
+                // Zooms the map onto the campus
+                zoom: 15
+            });
+
+            // Add full screen functionality to the map
+            mymap.addControl(new mapboxgl.FullscreenControl());
+
+            // Add navigation controls to the map
+            mymap.addControl(new mapboxgl.NavigationControl());
+
+            mymap.on('style.load', () => {
+                // Changes the color theme to be a little darker
+                mymap.setConfigProperty('basemap', 'lightPreset', 'dusk');
+                // Removes point of interest labels
+                mymap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                // Adds 3d objects; This would be useful for someone who is walking around and trying to better visualize the buildings and their own surroundings
+                mymap.setConfigProperty('basemap', 'show3DObjects', true);
+                // Removes road labels; This would be useful for a map that doesn't involve navigation by road
+                mymap.setConfigProperty('basemap', 'showRoadLabels', false);
+            });
+        </script>
+    </div>
+</body>
+
+</html>
