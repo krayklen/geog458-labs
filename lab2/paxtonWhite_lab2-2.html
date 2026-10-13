@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>World Cities by Population</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Map title */
+        #map-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: 3px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 1;
+        }
+
+        /* Legend panel */
+        #legend {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 190px;
+            background: rgba(255, 255, 255, 0.9);
+            margin-right: 20px;
+            margin-bottom: 40px;
+            padding: 10px;
+            border-radius: 3px;
+            text-align: left;
+            z-index: 1;
+        }
+
+        /* Each legend row */
+        .break {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        /* Legend circles */
+        .dot {
+            display: inline-block;
+            flex-shrink: 0;
+            border-radius: 50%;
+            border: 1px solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <div id="map-title">World Cities: Cities that contain the letter "p" and their populations</div>
+
+    <div id="legend"></div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia3JheWtsZW4iLCJhIjoiY211d3l5bHNxMDNqeDJ3cTRlaWpqYWphNiJ9.F0hlZBZsAKWFNujWjWOSpg';
+
+        const mymap = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/satellite-v9',
+            projection: 'globe',
+            center: [-96, 37.8],
+            zoom: 1
+        });
+
+        mymap.on('style.load', () => {
+            mymap.setFog({});
+        });
+
+        mymap.on('load', () => {
+
+            // Load the world cities data
+            mymap.addSource('world-cities', {
+                type: 'geojson',
+                data: 'data/world-cities.geojson'
+            });
+
+            // Add all cities to the map
+            mymap.addLayer({
+                id: 'world-cities-layer',
+                type: 'circle',
+                source: 'world-cities',
+
+                paint: {
+                    // Circle size represents population
+                    'circle-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['to-number', ['get', 'population']],
+                        0, 2,
+                        100000, 4,
+                        1000000, 8,
+                        5000000, 14,
+                        10000000, 20
+                    ],
+
+                    // Purple if the city name contains "p",
+                    // gold otherwise
+                    'circle-color': [
+                        'case',
+                        [
+                            'in',
+                            'p',
+                            [
+                                'downcase',
+                                ['get', 'accentcity']
+                            ]
+                        ],
+                        '#800080',
+                        '#FFD700'
+                    ],
+
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': 'white',
+                    'circle-opacity': 0.85
+                }
+            });
+
+            // Show city information when clicked
+            mymap.on('click', 'world-cities-layer', (e) => {
+                const feature = e.features[0];
+                const coordinates =
+                    feature.geometry.coordinates.slice();
+
+                const city = feature.properties.accentcity ||
+                    feature.properties.city;
+
+                const country = feature.properties.country;
+                const population = Number(feature.properties.population).toLocaleString();
+
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(
+                        '<strong>City:</strong> ' + city +
+                        '<br><strong>Country:</strong> ' +
+                        country.toUpperCase() +
+                        '<br><strong>Population:</strong> ' +
+                        population
+                    )
+                    .addTo(mymap);
+            });
+        });
+        
+        
+        // Legend for world cities
+        const legend = document.getElementById('legend');
+
+        const grades = ['P in name', 'Other cities'];
+        const radii = [6, 6];
+        const colors = ['#800080', '#FFD700'];
+        const labels = ['<strong>City Name</strong>'];
+
+        for (let i = 0; i < grades.length; i++) {
+            const value = grades[i];
+            const diameter = 2 * radii[i];
+
+            labels.push(
+                '<p class="break"><i class="dot" style="background:' + colors[i] +
+                '; width:' + diameter + 'px; height:' + diameter +
+                'px;"></i> <span class="dot-label" style="top:' +
+                diameter / 2 + 'px;">' + value + '</span></p>'
+            );
+        }
+
+        // Legend for population sizes
+        const populationGrades = [
+            '100,000',
+            '1,000,000',
+            '5,000,000',
+            '10,000,000+'
+        ];
+
+        const populationRadii = [4, 8, 14, 20];
+        const populationLabels = ['<strong>Population</strong>'];
+
+        for (let i = 0; i < populationGrades.length; i++) {
+            const value = populationGrades[i];
+            const diameter = 2 * populationRadii[i];
+
+            populationLabels.push(
+                '<p class="break"><i class="dot" style="background:#FFD700' +
+                '; width:' + diameter + 'px; height:' + diameter +
+                'px;"></i> <span class="dot-label" style="top:' +
+                diameter / 2 + 'px;">' + value + '</span></p>'
+            );
+        }
+
+        const source =
+            '<p style="text-align:right; font-size:10pt;">Source: ' +
+            '<a href="https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-populated-places/">Natural Earth</a></p>';
+
+        legend.innerHTML = labels.join('') + populationLabels.join('') + source;
+    </script>
+</body>
+
+</html>
