@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8' />
+    <title>my First Map</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #marker {
+            /*background-image: url('https://docs.mapbox.com/mapbox-gl-js/assets/washington-monument.jpg');*/
+            /*background-size: cover;*/
+            background-color: purple;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 2px solid black;
+            cursor: pointer;
+        }
+
+        .mapboxgl-popup {
+            max-width: 200px;
+        }
+    </style><style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #marker {
+            /*background-image: url('https://docs.mapbox.com/mapbox-gl-js/assets/washington-monument.jpg');*/
+            /*background-size: cover;*/
+            background-color: purple;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 2px solid black;
+            cursor: pointer;
+        }
+
+        .mapboxgl-popup {
+            max-width: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='map'>
+        <script>
+            // My mapbox token
+            mapboxgl.accessToken = 'pk.eyJ1Ijoia3JheWtsZW4iLCJhIjoiY211d3l5bHNxMDNqeDJ3cTRlaWpqYWphNiJ9.F0hlZBZsAKWFNujWjWOSpg';
+            const mymap = new mapboxgl.Map({
+                container: 'map',
+                //style: 'mapbox://styles/mapbox/streets-v9',
+                //projection: 'globe',
+                center: [-122.307814, 47.653817],
+                zoom: 15
+            });
+
+            const el = document.createElement('div');
+            el.id = 'marker';
+
+            const marker = new mapboxgl.Marker(el)
+                .setLngLat([-122.307814, 47.653817])
+                .setPopup(new mapboxgl.Popup().setText('Drumheller Fountain'))
+                .addTo(mymap);
+
+            mymap.addControl(new mapboxgl.FullscreenControl());
+            mymap.addControl(new mapboxgl.NavigationControl());
+
+            mymap.on('style.load', () => {
+                mymap.setConfigProperty('basemap', 'lightPreset', 'dusk');
+                mymap.setConfigProperty('basemap', 'showPointOfInterestLabels', false);
+                mymap.setConfigProperty('basemap', 'show3DObjects', true);
+                mymap.setConfigProperty('basemap', 'showRoadLabels', false);
+            });
+        </script>
+    </div>
+</body>
+
+</html>
