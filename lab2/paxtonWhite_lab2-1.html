@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>My First Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Layout of the legend panel. */
+        #legend {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 110px;
+            background: rgba(255, 255, 255, 0.5);
+            margin-right: 20px;
+            margin-bottom: 40px;
+            padding: 10px 20px 10px 10px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        /* Each row for a magnitude value. */
+        .break {
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* The circular symbol. */
+        .dot {
+            display: inline-block;
+            margin-top: 5px;
+            border-radius: 50%;
+            border: 1px solid white;
+            /*opacity: 0.6;*/
+        }
+
+        /* Label next to the symbol. */
+        .dot-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-style: italic;
+        }
+
+        /* Link color within the legend. */
+        #legend a {
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="legend"></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia3JheWtsZW4iLCJhIjoiY211d3l5bHNxMDNqeDJ3cTRlaWpqYWphNiJ9.F0hlZBZsAKWFNujWjWOSpg';
+        const mymap = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/satellite-v9',
+            projection: 'globe',
+            center: [-96, 37.8],
+            zoom: 1
+        });
+
+        // Add the next steps here, inside this script.
+        mymap.on('style.load', () => {
+            mymap.setFog({});
+        });
+
+        mymap.on('load', () => {
+            mymap.addSource('earthquake', {
+                type: 'geojson',
+                data: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson'
+            });
+
+            mymap.addLayer({
+                id: 'earthquake-layer',
+                type: 'circle',
+                source: 'earthquake',
+                paint: {
+                    /*'circle-radius': ['*', 2, ['get', 'mag']]*/
+                    // The Radius are chose to make lesser magnitude earthquakes smaller and higher magnitude earthquakes larger.
+                    'circle-radius': ['interpolate', ['linear'],
+                        ['to-number', ['get', 'mag'], 0],
+                        1, 0.7,
+                        1.5, 2,
+                        2, 4,
+                        2.5, 5,
+                        3, 6,
+                        3.5, 7,
+                        4.5, 9,
+                        6.5, 15,
+                        8.5, 17,
+                        10.5, 20
+                    ],
+                    'circle-stroke-width': 1,
+                    // Thie white gives a good contrast between each circle
+                    'circle-stroke-color': 'white',
+                    'circle-color': [
+                        // The colors are chosen to represent increasing earthquake magnitudes from green (low) to red (high).
+                        'interpolate', ['linear'],
+                        ['to-number', ['get', 'mag'], 0],
+                        1, '#006837',
+                        1.5, '#1a9850',
+                        2, '#66bd63',
+                        2.5, '#a6d96a',
+                        3, '#d9ef8b',
+                        3.5, '#fee08b',
+                        4.5, '#fdae61',
+                        6.5, '#f46d43',
+                        8.5, '#d73027',
+                        10.5, '#a50026'
+                    ],
+                }
+            });
+            mymap.on('click', 'earthquake-layer', (e) => {
+                const feature = e.features[0];
+                const coordinates = feature.geometry.coordinates.slice(0, 2);
+
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`<strong>Magnitude:</strong> ${feature.properties.mag}`)
+                    .addTo(mymap);
+            });
+        });
+
+        // Legend for the earthquake magnitudes
+        const legend = document.getElementById('legend');
+        const grades = [1, 1.5, 2, 2.5, 3, 3.5, 4.5, 6.5, 8.5, 10.5];
+        const radii = [.7, 2, 4, 5, 6, 7, 9, 15, 17, 20];
+        const colors = ['#006837', '#1a9850', '#66bd63', '#a6d96a', '#d9ef8b', '#fee08b', '#fdae61', '#f46d43', '#d73027', '#a50026'];
+        const labels = ['<strong>Magnitude</strong>'];
+
+        for (let i = 0; i < grades.length; i++) {
+            const value = grades[i];
+            const diameter = 2 * radii[i];
+
+            labels.push(
+                '<p class="break"><i class="dot" style="background:' + colors[i] +
+                '; width:' + diameter + 'px; height:' + diameter +
+                'px;"></i> <span class="dot-label" style="top:' +
+                diameter / 2 + 'px;">' + value + '</span></p>'
+            );
+        }
+
+        const source =
+            '<p style="text-align:right; font-size:10pt;">Source: ' +
+            '<a href="https://earthquake.usgs.gov/earthquakes/">USGS</a></p>';
+
+        legend.innerHTML = labels.join('') + source;
+    </script>
+</body>
+
+</html>
